@@ -1,0 +1,561 @@
+:root {
+  color: #16223a;
+  background: #eef3f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top left, rgba(48, 126, 255, 0.16), transparent 24%),
+    linear-gradient(180deg, #f4f7fa 0%, #eef3f7 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.loading-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #eef3f7;
+}
+
+.main-layout {
+  min-width: 0;
+}
+
+.app-sider {
+  position: sticky !important;
+  top: 0;
+  height: 100vh;
+  background: linear-gradient(180deg, #145c58 0%, #164d4a 100%) !important;
+  padding: 26px 18px;
+  box-shadow: 20px 0 60px rgba(17, 46, 64, 0.08);
+  overflow: hidden;
+}
+
+.sider-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 4px 28px;
+}
+
+.brand-block.compact {
+  justify-content: center;
+  margin-inline: 0;
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  color: #dff8f3;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 18px;
+}
+
+.brand-title.ant-typography,
+.brand-subtitle.ant-typography {
+  color: #ffffff;
+  margin: 0;
+}
+
+.brand-subtitle.ant-typography {
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+.app-menu {
+  background: transparent !important;
+  border: 0 !important;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.app-menu.ant-menu .ant-menu-item {
+  height: 48px;
+  line-height: 48px;
+  border-radius: 14px;
+  margin-inline: 0;
+  margin-block: 10px;
+  font-size: 18px;
+}
+
+.app-menu.ant-menu-dark .ant-menu-item-selected {
+  background: linear-gradient(90deg, #2e7cf7 0%, #2568da 100%);
+}
+
+.app-sider.ant-layout-sider-collapsed {
+  padding-inline: 12px;
+}
+
+.app-sider.ant-layout-sider-collapsed .app-menu.ant-menu .ant-menu-item {
+  margin-inline: 0;
+  padding-inline: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-card {
+  margin-top: 24px;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #d8ece8;
+}
+
+.status-card .ant-card-body {
+  padding: 18px !important;
+}
+
+.status-tag {
+  width: fit-content;
+  border-radius: 999px;
+}
+
+.status-title.ant-typography,
+.status-copy.ant-typography {
+  color: #e7f7f4;
+}
+
+.status-copy.ant-typography {
+  margin-bottom: 0;
+  opacity: 0.8;
+}
+
+.app-header {
+  height: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 32px 16px;
+  background: transparent;
+}
+
+.header-left {
+  min-width: 0;
+}
+
+.header-title-block {
+  min-width: 0;
+}
+
+.header-eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6d7a93;
+}
+
+.header-title.ant-typography {
+  margin: 8px 0 0;
+  color: #122033;
+  line-height: 1.16;
+}
+
+.header-tag {
+  padding-inline: 12px;
+  border-radius: 999px;
+}
+
+.header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sidebar-toggle {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.app-content {
+  padding: 0 32px 32px;
+  min-width: 0;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  background: radial-gradient(circle at top left, rgba(24, 108, 255, 0.16), transparent 24%), linear-gradient(180deg, #f4f7fa 0%, #eef3f7 100%);
+}
+
+.login-card {
+  width: min(420px, 100%);
+  border-radius: 20px !important;
+}
+
+.login-footer.ant-typography {
+  margin: 16px 0 0;
+  text-align: center;
+}
+
+.metric-card,
+.panel-card,
+.setting-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(17, 46, 64, 0.06) !important;
+  box-shadow: 0 18px 50px rgba(34, 66, 104, 0.08);
+}
+
+.panel-card {
+  overflow: hidden;
+}
+
+.metric-card .ant-card-body {
+  padding: 24px !important;
+}
+
+.panel-card .ant-card-head {
+  min-height: 60px;
+  font-size: 16px;
+}
+
+.panel-label-row,
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-toolbar-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+}
+
+.filter-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.filter-tabs.ant-tabs {
+  margin-bottom: 0;
+}
+
+.filter-tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.filter-tabs .ant-tabs-tab {
+  font-size: 15px;
+}
+
+.setting-card {
+  max-width: 760px;
+}
+
+.template-list-card .ant-card-body {
+  padding: 18px !important;
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 620px;
+  overflow: auto;
+  border: 1px solid rgba(17, 46, 64, 0.06);
+  border-radius: 14px;
+}
+
+.template-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid rgba(17, 46, 64, 0.06);
+  background: #ffffff;
+  color: #122033;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.template-list-item:last-child {
+  border-bottom: 0;
+}
+
+.template-list-item.active {
+  background: #eaf3ff;
+  font-weight: 600;
+}
+
+.template-preview-card .ant-card-body {
+  background: #f2f7ff;
+}
+
+.telegram-preview {
+  min-height: 560px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 18px;
+  border: 1px solid rgba(42, 120, 246, 0.18);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(42, 120, 246, 0.08), rgba(27, 154, 122, 0.08)),
+    #edf5ff;
+}
+
+.compact-preview {
+  min-height: 380px;
+}
+
+.workbench-card {
+  box-shadow: none;
+}
+
+.bot-template-workbench .template-list {
+  max-height: 520px;
+}
+
+.compact-list {
+  max-height: 460px;
+}
+
+.customer-toolbar {
+  margin-bottom: 16px;
+}
+
+.telegram-message {
+  width: min(100%, 420px);
+  padding: 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 14px 40px rgba(34, 66, 104, 0.12);
+}
+
+.telegram-preview-image {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.telegram-preview-text {
+  white-space: pre-wrap;
+  line-height: 1.65;
+  color: #122033;
+}
+
+.telegram-button-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.telegram-button-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.telegram-inline-button {
+  display: block;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid rgba(42, 120, 246, 0.28);
+  border-radius: 10px;
+  color: #1677ff;
+  background: #f7fbff;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-log-content.ant-typography {
+  max-width: 520px;
+  margin-bottom: 0;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 992px) {
+  .mobile-menu-drawer-root .ant-drawer-content,
+  .mobile-menu-drawer-root .ant-drawer-body,
+  .mobile-menu-drawer .ant-drawer-content,
+  .mobile-menu-drawer .ant-drawer-body {
+    background: linear-gradient(180deg, #145c58 0%, #164d4a 100%) !important;
+  }
+
+  .mobile-menu-drawer-root .ant-drawer-close,
+  .mobile-menu-drawer .ant-drawer-close {
+    color: #dff8f3;
+  }
+
+  .mobile-menu-drawer-root .app-menu.ant-menu-dark .ant-menu-item,
+  .mobile-menu-drawer .app-menu.ant-menu-dark .ant-menu-item {
+    color: rgba(255, 255, 255, 0.78) !important;
+  }
+
+  .mobile-menu-drawer-root .app-menu.ant-menu-dark .ant-menu-item-selected,
+  .mobile-menu-drawer .app-menu.ant-menu-dark .ant-menu-item-selected {
+    color: #ffffff !important;
+  }
+
+  .mobile-menu-drawer .sider-inner {
+    min-height: 100vh;
+    padding: 18px 14px;
+  }
+
+  .app-menu.ant-menu .ant-menu-item {
+    height: 42px;
+    line-height: 42px;
+    margin-block: 8px;
+    font-size: 16px;
+  }
+
+  .app-header,
+  .app-content {
+    padding-inline: 18px;
+  }
+
+  .app-header {
+    align-items: flex-start;
+    padding-top: 18px;
+  }
+
+  .page-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-tabs {
+    width: 100%;
+  }
+
+  .filter-tabs .ant-tabs-nav-wrap {
+    overflow-x: auto;
+  }
+
+  .page-header-row > .ant-space,
+  .page-header-row > button,
+  .page-toolbar-row > .ant-space,
+  .page-toolbar-row > button {
+    width: 100%;
+  }
+
+  .page-header-row .ant-space,
+  .page-toolbar-row .ant-space {
+    flex-wrap: wrap;
+  }
+
+  .brand-block {
+    margin-bottom: 18px;
+  }
+
+  .header-title.ant-typography {
+    font-size: 28px;
+    word-break: break-word;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-actions .ant-avatar {
+    display: none;
+  }
+
+  .status-card {
+    margin-top: 18px;
+  }
+
+  .panel-label-row {
+    gap: 8px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .metric-card .ant-card-body,
+  .panel-card .ant-card-body,
+  .setting-card .ant-card-body {
+    padding: 16px !important;
+  }
+
+  .telegram-preview {
+    min-height: 360px;
+    padding: 12px;
+  }
+
+  .compact-preview {
+    min-height: 280px;
+  }
+
+  .telegram-button-row {
+    grid-template-columns: 1fr;
+  }
+
+  .message-log-content.ant-typography {
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 576px) {
+  .app-header,
+  .app-content {
+    padding-inline: 12px;
+  }
+
+  .app-content {
+    padding-bottom: 20px;
+  }
+
+  .header-title.ant-typography {
+    font-size: 24px;
+  }
+
+  .login-page {
+    padding: 20px 12px;
+  }
+
+  .login-card .ant-card-body {
+    padding: 20px !important;
+  }
+
+  .ant-modal {
+    max-width: calc(100vw - 24px);
+  }
+}

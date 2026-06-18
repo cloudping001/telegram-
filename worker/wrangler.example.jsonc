@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "telegram-support-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-17",
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "replace-with-kv-namespace-id"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "telegram-support",
+      "database_id": "replace-with-d1-database-id",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "telegram-support-media"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "ConversationCoordinator",
+        "name": "CONVERSATION_COORDINATOR"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "new_sqlite_classes": ["ConversationCoordinator"],
+      "tag": "v1"
+    }
+  ]
+}

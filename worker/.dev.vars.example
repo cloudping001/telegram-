@@ -1,0 +1,10 @@
+# Local development only. Never commit worker/.dev.vars or worker/.prod.vars.
+TELEGRAM_WEBHOOK_SECRET=replace-me
+ADMIN_API_TOKEN=replace-me
+ADMIN_USERNAME=admin
+
+# Optional fallback token for local testing without D1 bot records.
+TELEGRAM_BOT_TOKEN=replace-me
+
+# Optional, if omitted system will use ADMIN_API_TOKEN
+# ADMIN_PASSWORD=replace-me
