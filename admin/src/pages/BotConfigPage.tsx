@@ -14,13 +14,16 @@ import {
   Card,
   Col,
   Drawer,
+  Empty,
   Form,
+  Grid,
   Input,
   InputNumber,
   Modal,
   Popconfirm,
   Row,
   Select,
+  Skeleton,
   Space,
   Switch,
   Table,
@@ -48,6 +51,10 @@ type SupportForm = {
   agents: BotSupportAgentInput[];
 };
 
+type BroadcastFormValues = BroadcastInput & {
+  templateName?: string;
+};
+
 const defaultSupportAgent: BotSupportAgentInput = {
   name: "",
   chatId: "",
@@ -59,9 +66,9 @@ const defaultSupportAgent: BotSupportAgentInput = {
 const sceneOptions = [
   { label: "欢迎语", value: "first-contact" },
   { label: "离线回复", value: "off-hours" },
-  { label: "关闭会话", value: "conversation-close" },
-  { label: "快捷回复", value: "quick-reply" }
+  { label: "群发消息", value: "broadcast" }
 ];
+const allowedTemplateScenes = new Set(sceneOptions.map((item) => item.value));
 
 const emptyTemplate: MessageTemplateInput = {
   name: "",
@@ -77,7 +84,8 @@ const emptyTemplate: MessageTemplateInput = {
   enabled: true
 };
 
-const emptyBroadcast: BroadcastInput = {
+const emptyBroadcast: BroadcastFormValues = {
+  templateName: "",
   content: "",
   imageUrl: "",
   parseMode: "plain",
@@ -133,10 +141,11 @@ function MessagePreview({ imageUrl, content, buttons }: { imageUrl?: string; con
 }
 
 export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformAdmin?: boolean }) {
+  const screens = Grid.useBreakpoint();
   const [form] = Form.useForm<BotConfigInput>();
   const [supportForm] = Form.useForm<SupportForm>();
   const [templateForm] = Form.useForm<MessageTemplateInput>();
-  const [broadcastForm] = Form.useForm<BroadcastInput>();
+  const [broadcastForm] = Form.useForm<BroadcastFormValues>();
   const [bots, setBots] = useState<BotConfig[]>([]);
   const [botDrawerOpen, setBotDrawerOpen] = useState(false);
   const [workbenchOpen, setWorkbenchOpen] = useState(false);
@@ -157,7 +166,9 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
   const [saving, setSaving] = useState(false);
   const [savingSupport, setSavingSupport] = useState(false);
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const [savingBroadcastTemplate, setSavingBroadcastTemplate] = useState(false);
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
+  const useMobileCards = !screens.md;
 
   const templateValues = Form.useWatch([], templateForm) ?? emptyTemplate;
   const broadcastValues = Form.useWatch([], broadcastForm) ?? emptyBroadcast;
@@ -206,7 +217,7 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
   const loadTemplates = async (bot: BotConfig, preferredId?: string) => {
     setTemplateLoading(true);
     try {
-      const rows = await api.botTemplates(bot.id);
+      const rows = (await api.botTemplates(bot.id)).filter((item) => allowedTemplateScenes.has(item.scene));
       setTemplates(rows);
       const next = rows.find((item) => item.id === preferredId) ?? rows[0] ?? null;
       setSelectedTemplateId(next?.id ?? null);
@@ -343,6 +354,7 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
       return;
     }
     const values = await broadcastForm.validateFields();
+    const { templateName: _templateName, ...payload } = values;
     Modal.confirm({
       title: "确认群发？",
       content: `将发送给当前机器人下 ${customers.length} 个已互动且未拉黑的客户。发送后会写入消息记录。`,
@@ -352,8 +364,8 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
         setSendingBroadcast(true);
         try {
           const result = await api.broadcastToBotCustomers(activeBot.id, {
-            ...values,
-            buttons: values.buttons ?? []
+            ...payload,
+            buttons: payload.buttons ?? []
           });
           setBroadcastResult(result);
           message.success(`群发完成：成功 ${result.sent}，失败 ${result.failed}`);
@@ -365,11 +377,92 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
     });
   };
 
+  const saveBroadcastTemplate = async () => {
+    if (!activeBot) {
+      return;
+    }
+    const values = await broadcastForm.validateFields();
+    setSavingBroadcastTemplate(true);
+    try {
+      const saved = await api.createBotTemplate(activeBot.id, {
+        name: values.templateName?.trim() || "群发消息模板",
+        scene: "broadcast",
+        content: values.content.trim(),
+        imageUrl: values.imageUrl?.trim() ?? "",
+        parseMode: values.parseMode ?? "plain",
+        isDefault: false,
+        buttons: values.buttons ?? [],
+        timezone: "",
+        workStart: "",
+        workEnd: "",
+        enabled: true
+      });
+      message.success("已保存到消息模板");
+      await loadTemplates(activeBot, saved.id);
+    } finally {
+      setSavingBroadcastTemplate(false);
+    }
+  };
+
   const removeBot = async (id: string) => {
     await api.deleteBot(id);
     message.success("机器人及其绑定配置已删除");
     await loadBots();
   };
+
+  const renderBotActions = (record: BotConfig, compact = false) => (
+    <Space wrap className={compact ? "bot-card-actions" : undefined}>
+      <Button type="primary" icon={<AppstoreOutlined />} onClick={() => openWorkbench(record)}>
+        管理
+      </Button>
+      <Button icon={<EditOutlined />} onClick={() => openEdit(record)}>
+        编辑
+      </Button>
+      <Popconfirm title="确认删除该机器人及其绑定数据？" onConfirm={() => removeBot(record.id)}>
+        <Button danger icon={<DeleteOutlined />}>
+          {compact ? "删除" : null}
+        </Button>
+      </Popconfirm>
+    </Space>
+  );
+
+  const botColumns: ColumnsType<BotConfig> = [
+    ...(isPlatformAdmin
+      ? [
+          {
+            title: "所属用户",
+            dataIndex: "tenantName",
+            width: 170,
+            render: (_: string | undefined, record: BotConfig) => (
+              <Space direction="vertical" size={2}>
+                <Typography.Text strong ellipsis>
+                  {record.tenantName || record.tenantId || "-"}
+                </Typography.Text>
+                {record.tenantId ? <Typography.Text type="secondary">{record.tenantId}</Typography.Text> : null}
+              </Space>
+            )
+          }
+        ]
+      : []),
+    { title: "机器人", dataIndex: "name", width: 150, ellipsis: true },
+    { title: "用户名", dataIndex: "username", width: 150, ellipsis: true },
+    {
+      title: "状态",
+      dataIndex: "status",
+      width: 90,
+      render: (value: BotConfig["status"]) => (
+        <Tag color={value === "online" ? "success" : "default"}>{value === "online" ? "在线" : "暂停"}</Tag>
+      )
+    },
+    { title: "Webhook 路径", dataIndex: "webhookPath", width: 240, ellipsis: true },
+    { title: "最近同步", dataIndex: "latestSync", width: 160 },
+    {
+      title: "操作",
+      width: 260,
+      fixed: "right",
+      render: (_, record) => renderBotActions(record)
+    }
+  ];
 
   const customerColumns: ColumnsType<BotCustomer> = [
     {
@@ -423,60 +516,55 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
         </Space>
       </div>
 
-      <Card className="panel-card">
-        <Table
-          rowKey="id"
-          loading={loading}
-          dataSource={visibleBots}
-          pagination={false}
-          scroll={{ x: 1060 }}
-          columns={[
-            ...(isPlatformAdmin
-              ? [
-                  {
-                    title: "所属用户",
-                    dataIndex: "tenantName",
-                    width: 180,
-                    render: (_: string | undefined, record: BotConfig) => (
-                      <Space direction="vertical" size={2}>
-                        <Typography.Text strong>{record.tenantName || record.tenantId || "-"}</Typography.Text>
-                        {record.tenantId ? <Typography.Text type="secondary">{record.tenantId}</Typography.Text> : null}
-                      </Space>
-                    )
-                  }
-                ]
-              : []),
-            { title: "机器人", dataIndex: "name", width: 180 },
-            { title: "用户名", dataIndex: "username", width: 180 },
-            {
-              title: "状态",
-              dataIndex: "status",
-              width: 100,
-              render: (value: BotConfig["status"]) => (
-                <Tag color={value === "online" ? "success" : "default"}>{value === "online" ? "在线" : "暂停"}</Tag>
-              )
-            },
-            { title: "Webhook 路径", dataIndex: "webhookPath", width: 260 },
-            { title: "最近同步", dataIndex: "latestSync", width: 180 },
-            {
-              title: "操作",
-              width: 300,
-              render: (_, record) => (
-                <Space wrap>
-                  <Button type="primary" icon={<AppstoreOutlined />} onClick={() => openWorkbench(record)}>
-                    管理
-                  </Button>
-                  <Button icon={<EditOutlined />} onClick={() => openEdit(record)}>
-                    编辑
-                  </Button>
-                  <Popconfirm title="确认删除该机器人及其绑定数据？" onConfirm={() => removeBot(record.id)}>
-                    <Button danger icon={<DeleteOutlined />} />
-                  </Popconfirm>
-                </Space>
-              )
-            }
-          ]}
-        />
+      <Card className="panel-card bot-list-panel">
+        {useMobileCards ? (
+          <div className="bot-card-list">
+            {loading ? (
+              <Skeleton active paragraph={{ rows: 4 }} title={false} />
+            ) : visibleBots.length ? (
+              visibleBots.map((bot) => (
+                <Card key={bot.id} className="bot-mobile-card" variant="borderless">
+                  <div className="bot-card-heading">
+                    <Space direction="vertical" size={2}>
+                      <Typography.Text strong>{bot.name}</Typography.Text>
+                      <Typography.Text type="secondary">{bot.username}</Typography.Text>
+                    </Space>
+                    <Tag color={bot.status === "online" ? "success" : "default"}>{bot.status === "online" ? "在线" : "暂停"}</Tag>
+                  </div>
+                  <div className="bot-card-meta">
+                    {isPlatformAdmin ? (
+                      <div className="bot-card-meta-row">
+                        <span>所属用户</span>
+                        <Typography.Text ellipsis>{bot.tenantName || bot.tenantId || "-"}</Typography.Text>
+                      </div>
+                    ) : null}
+                    <div className="bot-card-meta-row">
+                      <span>Webhook</span>
+                      <Typography.Text ellipsis>{bot.webhookPath || "-"}</Typography.Text>
+                    </div>
+                    <div className="bot-card-meta-row">
+                      <span>最近同步</span>
+                      <Typography.Text>{bot.latestSync || "-"}</Typography.Text>
+                    </div>
+                  </div>
+                  {renderBotActions(bot, true)}
+                </Card>
+              ))
+            ) : (
+              <Empty description="暂无机器人" />
+            )}
+          </div>
+        ) : (
+          <Table
+            rowKey="id"
+            loading={loading}
+            dataSource={visibleBots}
+            pagination={false}
+            tableLayout="fixed"
+            scroll={{ x: isPlatformAdmin ? 1220 : 1050 }}
+            columns={botColumns}
+          />
+        )}
       </Card>
 
       <Drawer
@@ -707,29 +795,37 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
                           <Input.TextArea rows={6} />
                         </Form.Item>
                         {templateValues.scene === "off-hours" ? (
-                          <Row gutter={12}>
-                            <Col xs={24} md={8}>
-                              <Form.Item label="时区" name="timezone">
-                                <Select
-                                  options={[
-                                    { label: "Asia/Singapore", value: "Asia/Singapore" },
-                                    { label: "Asia/Shanghai", value: "Asia/Shanghai" },
-                                    { label: "UTC", value: "UTC" }
-                                  ]}
-                                />
-                              </Form.Item>
-                            </Col>
-                            <Col xs={12} md={8}>
-                              <Form.Item label="工作开始" name="workStart">
-                                <Input placeholder="09:00" />
-                              </Form.Item>
-                            </Col>
-                            <Col xs={12} md={8}>
-                              <Form.Item label="工作结束" name="workEnd">
-                                <Input placeholder="22:00" />
-                              </Form.Item>
-                            </Col>
-                          </Row>
+                          <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                            <Alert
+                              type="info"
+                              showIcon
+                              message="非工作时间启用离线回复"
+                              description="下面填写的是正常接待时间。客户在该时间段之外发送消息时，系统会自动发送这条离线回复。"
+                            />
+                            <Row gutter={12}>
+                              <Col xs={24} md={8}>
+                                <Form.Item label="时区" name="timezone">
+                                  <Select
+                                    options={[
+                                      { label: "Asia/Singapore", value: "Asia/Singapore" },
+                                      { label: "Asia/Shanghai", value: "Asia/Shanghai" },
+                                      { label: "UTC", value: "UTC" }
+                                    ]}
+                                  />
+                                </Form.Item>
+                              </Col>
+                              <Col xs={12} md={8}>
+                                <Form.Item label="接待开始" name="workStart">
+                                  <Input placeholder="09:00" />
+                                </Form.Item>
+                              </Col>
+                              <Col xs={12} md={8}>
+                                <Form.Item label="接待结束" name="workEnd">
+                                  <Input placeholder="22:00" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Space>
                         ) : null}
                         <Form.List name="buttons">
                           {(fields, { add, remove }) => (
@@ -881,10 +977,17 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
                       <Form form={broadcastForm} layout="vertical" initialValues={emptyBroadcast}>
                         <Row gutter={12}>
                           <Col xs={24} md={12}>
+                            <Form.Item label="模板名称" name="templateName">
+                              <Input placeholder="保存为模板时使用" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
                             <Form.Item label="图片外链" name="imageUrl">
                               <Input placeholder="https://example.com/image.png" />
                             </Form.Item>
                           </Col>
+                        </Row>
+                        <Row gutter={12}>
                           <Col xs={24} md={12}>
                             <Form.Item label="解析模式" name="parseMode">
                               <Select
@@ -936,16 +1039,20 @@ export default function BotConfigPage({ isPlatformAdmin = false }: { isPlatformA
                             </Space>
                           )}
                         </Form.List>
-                        <Button
-                          type="primary"
-                          size="large"
-                          icon={<SendOutlined />}
-                          loading={sendingBroadcast}
-                          onClick={sendBroadcast}
-                          style={{ marginTop: 18 }}
-                        >
-                          发送给已互动客户
-                        </Button>
+                        <Space wrap style={{ marginTop: 18 }}>
+                          <Button
+                            type="primary"
+                            size="large"
+                            icon={<SendOutlined />}
+                            loading={sendingBroadcast}
+                            onClick={sendBroadcast}
+                          >
+                            发送给已互动客户
+                          </Button>
+                          <Button size="large" loading={savingBroadcastTemplate} onClick={saveBroadcastTemplate}>
+                            保存为模板
+                          </Button>
+                        </Space>
                       </Form>
                     </Card>
                   </Col>

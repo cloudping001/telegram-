@@ -26,19 +26,20 @@ import {
   Tag,
   Typography
 } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import type { AuthSession } from "./types";
-import AccountPage from "./pages/AccountPage";
-import AuditLogsPage from "./pages/AuditLogsPage";
-import BotConfigPage from "./pages/BotConfigPage";
-import DashboardPage from "./pages/DashboardPage";
-import LoginPage from "./pages/LoginPage";
-import MessageLogsPage from "./pages/MessageLogsPage";
-import RegisterPage from "./pages/RegisterPage";
-import SystemSettingsPage from "./pages/SystemSettingsPage";
-import TenantManagementPage from "./pages/TenantManagementPage";
+
+const AccountPage = lazy(() => import("./pages/AccountPage"));
+const AuditLogsPage = lazy(() => import("./pages/AuditLogsPage"));
+const BotConfigPage = lazy(() => import("./pages/BotConfigPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const MessageLogsPage = lazy(() => import("./pages/MessageLogsPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const SystemSettingsPage = lazy(() => import("./pages/SystemSettingsPage"));
+const TenantManagementPage = lazy(() => import("./pages/TenantManagementPage"));
 
 const { Header, Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -57,6 +58,14 @@ const userMenuItems = baseMenuItems.filter((item) => item.key !== "/system");
 
 function requireAuth(node: JSX.Element) {
   return api.isAuthenticated() ? node : <Navigate to="/login" replace />;
+}
+
+function PageFallback() {
+  return (
+    <div className="route-loading">
+      <Spin />
+    </div>
+  );
 }
 
 export default function App() {
@@ -190,105 +199,121 @@ export default function App() {
         }
       }}
     >
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route
-          path="/*"
-          element={requireAuth(
-            sessionLoading && !session ? (
-              <div className="loading-shell">
-                <Spin size="large" />
-              </div>
-            ) : (
-            <Layout className="app-shell">
-              {isDesktop ? (
-                <Sider
-                  width={272}
-                  collapsedWidth={88}
-                  collapsed={collapsed}
-                  className="app-sider"
-                  trigger={null}
+      <Suspense
+        fallback={
+          <div className="loading-shell">
+            <Spin size="large" />
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/*"
+            element={requireAuth(
+              sessionLoading && !session ? (
+                <div className="loading-shell">
+                  <Spin size="large" />
+                </div>
+              ) : (
+              <Layout className="app-shell">
+                {isDesktop ? (
+                  <Sider
+                    width={272}
+                    collapsedWidth={88}
+                    collapsed={collapsed}
+                    className="app-sider"
+                    trigger={null}
+                  >
+                    <SidebarContent compact={collapsed} />
+                  </Sider>
+                ) : null}
+
+                <Drawer
+                  title={null}
+                  placement="left"
+                  open={!isDesktop && mobileMenuOpen}
+                  onClose={() => setMobileMenuOpen(false)}
+                  width={288}
+                  rootClassName="mobile-menu-drawer-root"
+                  className="mobile-menu-drawer"
+                  styles={{
+                    content: { background: "linear-gradient(180deg, #145c58 0%, #164d4a 100%)" },
+                    body: { padding: 0, background: "linear-gradient(180deg, #145c58 0%, #164d4a 100%)" }
+                  }}
                 >
-                  <SidebarContent compact={collapsed} />
-                </Sider>
-              ) : null}
+                  <SidebarContent />
+                </Drawer>
 
-              <Drawer
-                title={null}
-                placement="left"
-                open={!isDesktop && mobileMenuOpen}
-                onClose={() => setMobileMenuOpen(false)}
-                width={288}
-                rootClassName="mobile-menu-drawer-root"
-                className="mobile-menu-drawer"
-                styles={{
-                  content: { background: "linear-gradient(180deg, #145c58 0%, #164d4a 100%)" },
-                  body: { padding: 0, background: "linear-gradient(180deg, #145c58 0%, #164d4a 100%)" }
-                }}
-              >
-                <SidebarContent />
-              </Drawer>
-
-              <Layout className="main-layout">
-                <Header className="app-header">
-                  <Space align="center" size={12} className="header-left">
-                    {isDesktop ? (
-                      <Button
-                        className="sidebar-toggle"
-                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={() => setCollapsed((value) => !value)}
-                      />
-                    ) : (
-                      <Button
-                        className="sidebar-toggle"
-                        icon={<MenuOutlined />}
-                        onClick={() => setMobileMenuOpen(true)}
-                      >
-                        菜单
+                <Layout className="main-layout">
+                  <Header className="app-header">
+                    <Space align="center" size={12} className="header-left">
+                      {isDesktop ? (
+                        <Button
+                          className="sidebar-toggle"
+                          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                          onClick={() => setCollapsed((value) => !value)}
+                        />
+                      ) : (
+                        <Button
+                          className="sidebar-toggle"
+                          icon={<MenuOutlined />}
+                          onClick={() => setMobileMenuOpen(true)}
+                        >
+                          菜单
+                        </Button>
+                      )}
+                      <div className="header-title-block">
+                        <Typography.Text className="header-eyebrow">Telegram 中转服务</Typography.Text>
+                        <Typography.Title level={2} className="header-title">
+                          {pageTitle}
+                        </Typography.Title>
+                      </div>
+                    </Space>
+                    <Space size={12} className="header-actions">
+                      <Tag color="processing" className="header-tag">
+                        Pages + Workers
+                      </Tag>
+                      <Button type="default" icon={<PoweroffOutlined />} onClick={logout}>
+                        退出
                       </Button>
-                    )}
-                    <div className="header-title-block">
-                      <Typography.Text className="header-eyebrow">Telegram 中转服务</Typography.Text>
-                      <Typography.Title level={2} className="header-title">
-                        {pageTitle}
-                      </Typography.Title>
-                    </div>
-                  </Space>
-                  <Space size={12} className="header-actions">
-                    <Tag color="processing" className="header-tag">
-                      Pages + Workers
-                    </Tag>
-                    <Button type="default" icon={<PoweroffOutlined />} onClick={logout}>
-                      退出
-                    </Button>
-                    <Avatar size={42}>CF</Avatar>
-                  </Space>
-                </Header>
+                      <Avatar size={42}>CF</Avatar>
+                    </Space>
+                  </Header>
 
-                <Content className="app-content">
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/tenants" element={<TenantManagementPage />} />
-                    <Route path="/dashboard" element={<DashboardPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
-                    <Route path="/bots" element={<BotConfigPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
-                    <Route path="/messages" element={<MessageLogsPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
-                    <Route path="/audit" element={<AuditLogsPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
-                    <Route path="/account" element={<AccountPage />} />
-                    <Route
-                      path="/system"
-                      element={
-                        session?.isPlatformAdmin ? <SystemSettingsPage /> : <Navigate to="/dashboard" replace />
-                      }
-                    />
-                  </Routes>
-                </Content>
+                  <Content className="app-content">
+                    <Suspense fallback={<PageFallback />}>
+                      <Routes>
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/tenants" element={<TenantManagementPage />} />
+                        <Route path="/dashboard" element={<DashboardPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
+                        <Route path="/bots" element={<BotConfigPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
+                        <Route path="/messages" element={<MessageLogsPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
+                        <Route path="/audit" element={<AuditLogsPage isPlatformAdmin={Boolean(session?.isPlatformAdmin)} />} />
+                        <Route path="/account" element={<AccountPage />} />
+                        <Route
+                          path="/system"
+                          element={
+                            session?.isPlatformAdmin ? <SystemSettingsPage /> : <Navigate to="/dashboard" replace />
+                          }
+                        />
+                      </Routes>
+                    </Suspense>
+                  </Content>
+                  <footer className="app-footer">
+                    本系统由TG:@yanhuacloud赞助开源，购买阿里云腾讯云，点击前往
+                    <a href="https://www.juhecloud.online/" target="_blank" rel="noreferrer">
+                      聚合云平台
+                    </a>
+                  </footer>
+                </Layout>
               </Layout>
-            </Layout>
-            )
-          )}
-        />
-      </Routes>
+              )
+            )}
+          />
+        </Routes>
+      </Suspense>
     </ConfigProvider>
   );
 }

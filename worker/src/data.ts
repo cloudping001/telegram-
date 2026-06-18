@@ -50,18 +50,6 @@ export const templateSeed: TemplateRecord[] = [
     workEnd: "22:00",
     enabled: true,
     updatedAt: "2026-06-17 21:42"
-  },
-  {
-    id: "tpl-close",
-    name: "关闭会话",
-    scene: "conversation-close",
-    content: "本次会话已结束，如需继续咨询请直接发送消息。",
-    imageUrl: "",
-    parseMode: "plain",
-    isDefault: false,
-    buttons: [],
-    enabled: false,
-    updatedAt: "2026-06-17 20:03"
   }
 ];
 
